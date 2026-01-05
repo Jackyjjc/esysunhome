@@ -396,26 +396,6 @@ class ESYSunhomeAPI:
         else:
             raise Exception(f"Failed to fetch device info. Status: {status}, Response: {data}")
 
-    async def get_configured_mode(self) -> Optional[str]:
-        """Fetch the user-configured mode from the API.
-        
-        This is the mode selected in the app (e.g., "5" for BEM), not the
-        currently running mode from MQTT (which changes based on schedule).
-        
-        Returns:
-            Mode code as string (e.g., "1", "2", "5") or None if not available
-        """
-        try:
-            device_info = await self.get_device_info()
-            mode_code = device_info.get("code")
-            if mode_code is not None:
-                _LOGGER.debug(f"Configured mode from API: {mode_code}")
-                return str(mode_code)
-            return None
-        except Exception as e:
-            _LOGGER.warning(f"Failed to fetch configured mode: {e}")
-            return None
-
     @retry_with_backoff(max_retries=2, initial_delay=1.0)
     async def get_mqtt_certs(self) -> Dict[str, Any]:
         """Fetch MQTT certificate URLs from the API.

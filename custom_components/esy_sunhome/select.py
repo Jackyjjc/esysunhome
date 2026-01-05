@@ -179,13 +179,21 @@ class ModeSelect(EsySunhomeEntity, SelectEntity):
         
         MQTT (direct, faster for HA automations):
           HA → MQTT command → Inverter (bypasses cloud)
+          Note: BEM (Battery Energy Management) always uses API because it's
+          a server-side scheduling feature, not a simple register write.
         
         Args:
             mode_name: The mode name being changed to (string)
             mode_key: The mode code being changed to (int)
         """
+        # BEM (mode_key 5) MUST use API - it's a server-side scheduling feature
+        # MQTT register 57 value 5 = "AC Charging off emergency backup mode" which is different!
+        # The server translates API code 5 (BEM) to register 57 = 1 (Regular) internally
+        is_bem = (mode_key == 5)
+        use_mqtt = self._use_mqtt_for_mode_change and not is_bem
+        
         try:
-            if self._use_mqtt_for_mode_change:
+            if use_mqtt:
                 # Direct MQTT method - send command directly to inverter
                 mqtt_success = await self.coordinator.set_mode_mqtt(mode_key)
                 
@@ -198,15 +206,21 @@ class ModeSelect(EsySunhomeEntity, SelectEntity):
                     raise Exception("MQTT publish failed")
                 
                 method_status = "mqtt_sent"
+                method_used = "mqtt"
             else:
                 # API method (like the app does)
                 # The ESY server will then send the MQTT command to the inverter
+                if is_bem and self._use_mqtt_for_mode_change:
+                    _LOGGER.info(
+                        f"BEM requires API (server-side scheduling) - using API despite MQTT setting"
+                    )
                 await self.coordinator.api.set_mode(mode_key)
                 _LOGGER.info(
                     f"✓ API call sent for mode change to: {mode_name}. "
                     f"Server will send MQTT to inverter. (attempt {self._retry_count + 1}/{MAX_RETRIES + 1})"
                 )
                 method_status = "api_sent"
+                method_used = "api"
             
             # Fire event for request success
             self.hass.bus.async_fire(
@@ -216,7 +230,8 @@ class ModeSelect(EsySunhomeEntity, SelectEntity):
                     "mode": mode_name,
                     "mode_code": mode_key,
                     "status": method_status,
-                    "method": "mqtt" if self._use_mqtt_for_mode_change else "api",
+                    "method": method_used,
+                    "forced_api": is_bem and self._use_mqtt_for_mode_change,
                     "attempt": self._retry_count + 1
                 }
             )
@@ -343,9 +358,12 @@ class ModeSelect(EsySunhomeEntity, SelectEntity):
                     }
                 )
                 
-                # Retry using configured method
+                # Retry using configured method (BEM always uses API)
+                is_bem = (mode_key == 5)
+                use_mqtt = self._use_mqtt_for_mode_change and not is_bem
+                
                 try:
-                    if self._use_mqtt_for_mode_change:
+                    if use_mqtt:
                         mqtt_success = await self.coordinator.set_mode_mqtt(mode_key)
                         if mqtt_success:
                             _LOGGER.info(
@@ -421,19 +439,22 @@ class ModeSelect(EsySunhomeEntity, SelectEntity):
         )
 
     def get_mode_key(self, value: str) -> int:
-        """Get the MQTT register value to write for a given mode name.
+        """Get the mode code to send for a given mode name.
         
-        Based on APK analysis, the MQTT systemRunMode register value is NOT
-        the same as the display code. The mapping is:
-        - Regular Mode -> write 1
-        - Emergency Mode -> write 4
-        - Electricity Sell Mode -> write 3
-        - Battery Energy Management -> write 5 (may need adjustment)
+        Based on APK analysis:
+        - Regular Mode -> code 1
+        - Emergency Mode -> code 4 (API) / register 4 (MQTT)
+        - Electricity Sell Mode -> code 3
+        - Battery Energy Management -> code 5 (API only!)
+        
+        Note: BEM (code 5) is a server-side scheduling feature. Writing
+        MQTT register 57 = 5 activates "AC Charging off emergency backup mode"
+        which is a different mode! BEM always uses the API.
         
         Args:
             value: The operating mode name (e.g., "Regular Mode")
             
         Returns:
-            The MQTT register value to write, or None if not found
+            The mode code to send, or None if not found
         """
         return BatteryState.modes_to_mqtt.get(value)
