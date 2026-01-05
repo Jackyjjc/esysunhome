@@ -1,29 +1,100 @@
 # ESY Sunhome for Home Assistant
 
-This is an initial version of a custom component for the ESY Sunhome battery, it is a work in progress and my first custom component.
-
-For those who are looking to purchase/install a sunhome battery, get $50 off using my code: AU1587 when you register and set up the ESY sunhome app. If like me, you're switching to Amber for wholesale rates, you can use code QVLA4DT4 to get $120 off.
+A Home Assistant integration for ESY Sunhome battery systems, providing monitoring and control via MQTT.
 
 ![Example Screenshot](/screenshot.png)
 
-Special thanks to airzone for documenting so much of the inner workings over at: [@airzone-sama](https://github.com/airzone-sama/esy_sunhome) 
+## ⚠️ Important: Firmware Requirement
+
+**Version 2.x requires newer ESY battery firmware with MQTT support.**
+
+The ESY web portal has information about the firmware that your inverter is using, you can also just try the integration.. if you're not seeing data in one then its likely you have the other.
+
+## Features
+
+- **Real-time updates** via MQTT (fast refresh)
+- **Mode control** - Change operating modes from Home Assistant
+- **Comprehensive sensors** - Power, energy, battery status, temperatures
+- **Secure connection** - mTLS authentication
+
+## Sensors
+
+| Category | Sensors |
+|----------|---------|
+| **Power** | PV Power, DC PV, AC PV (CT2), Battery, Grid, Load |
+| **Battery** | SOC, SOH, Voltage, Current, Status, Charging/Discharging Power |
+| **Energy** | Daily/Total Generation, Consumption, Grid Export, Battery Charge/Discharge |
+| **System** | Grid Voltage/Frequency, Inverter Temperature, Operating Mode |
+
+## Mode Control
+
+Control your battery mode directly from Home Assistant:
+
+| Mode | Description |
+|------|-------------|
+| Regular Mode | Normal self-consumption |
+| Emergency Mode | Charge from grid (storm prep) |
+| Electricity Sell Mode | Maximize grid export |
+| Battery Energy Management | Server-side scheduling |
+
+Configure API or direct MQTT mode changes in the integration options.
 
 ## Installation
 
-The simplest method is using 'HACS':
+### HACS (Recommended)
 
-- Go to HACS / Integrations
-- Click the 3 dots in the top right
-- Select "Custom repositories"
-- Add the repository URL - https://github.com/branko-lazarevic/esysunhome
-- Select category Integration
-- Click ADD
-- Now from HACS / Integrations you can find ESY Sunhome and click Download
-- Restart Home Assistant
+1. Go to **HACS → Integrations**
+2. Click the **⋮** menu → **Custom repositories**
+3. Add: `https://github.com/branko-lazarevic/esysunhome`
+4. Select category: **Integration** → Click **ADD**
+5. Find "ESY Sunhome" in HACS and click **Download**
+6. **Restart Home Assistant**
 
-Now you can add the integration using the ADD INTERGATION button in Settings / Devices & services, search for ESY Sunhome.
-It will ask you for your username and password that you use in the ESY mobile app and it will prompt you for the inverter ID, if you don't know it and only have one in your account then just click next and it will default to the first one on your account.
+### Manual Installation
 
-## Sensors, Dashboards & Automation
+1. Download the latest release
+2. Copy `custom_components/esy_sunhome` to your `config/custom_components/` directory
+3. Restart Home Assistant
 
-As mentioned previously, this is a work in progress through trial and error to determine what works best for me but if you'd like to follow my progress, i'll keep the github pages updated here: [ESY Sunhome Battery Home Assistant Integration](https://branko-lazarevic.github.io/esysunhome)
+## Configuration
+
+1. Go to **Settings → Devices & Services**
+2. Click **Add Integration** → Search for "ESY Sunhome"
+3. Enter your ESY app username and password
+4. Select your inverter (or leave blank to use the first one)
+
+### Options
+
+After setup, click **Configure** on the integration to set:
+
+- **Mode Change Method**: API (default, like the app) or Direct MQTT (faster)
+
+## Troubleshooting
+
+### Enable Debug Logging
+
+```yaml
+logger:
+  logs:
+    custom_components.esy_sunhome: debug
+```
+
+### Download Diagnostics
+
+**Developer Tools → Actions → esy_sunhome.dump_debug → Copy output from (Settings → System → Logs)**
+
+## Referral Codes
+
+If you're purchasing an ESY Sunhome battery, get **$50 off** using code: **AU1587** when registering in the ESY app.
+
+Switching to Amber for wholesale electricity rates? Use code **QVLA4DT4** for **$120 off**.
+
+## Resources
+
+- [Project Documentation](https://branko-lazarevic.github.io/esysunhome)
+- [Changelog](CHANGES.md)
+- [Release Notes](RELEASE_NOTES_v2.md)
+
+## License
+
+This project is licensed under the MIT License.
