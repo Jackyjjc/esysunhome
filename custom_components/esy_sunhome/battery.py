@@ -249,6 +249,15 @@ class EsySunhomeBattery:
         self._connected = True
         while self._connected:
             try:
+                if not self.device_id:
+                    _LOGGER.info("Device ID not set, fetching from API...")
+                    if not self.api:
+                        self.api = ESYSunhomeAPI(self.username, self.password, self.device_id)
+                    await self.api.ensure_device_id()
+                    self.device_id = self.api.device_id
+                    self.subscribe_topic = f"/APP/{self.device_id}/NEWS"
+                    _LOGGER.info("Fetched Device ID: %s, subscribing to %s", self.device_id, self.subscribe_topic)
+
                 async with aiomqtt.Client(
                     hostname=ESY_MQTT_BROKER_URL, port=ESY_MQTT_BROKER_PORT
                 ) as self._client:
