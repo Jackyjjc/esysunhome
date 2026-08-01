@@ -89,6 +89,14 @@ logger:
 
 **Developer Tools → Actions → esy_sunhome.dump_debug → Copy output from (Settings → System → Logs)**
 
+### Correct Incorrect Battery Charge Statistics
+
+Version 2.2.4 corrects how Home Assistant handles the daily battery charge
+counter when the inverter resets it after midnight. Previously recorded spikes
+are not changed automatically. To repair them, go to **Developer Tools →
+Statistics**, find **Daily Battery Charge**, select **Adjust sum**, and correct
+the affected date and time.
+
 ## Referral Codes
 
 If you're purchasing an ESY Sunhome battery, get **$50 off** using code: **AU1587** when registering in the ESY app.

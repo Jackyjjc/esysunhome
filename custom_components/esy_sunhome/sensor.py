@@ -311,7 +311,7 @@ class DailyBattChargeSensor(EsyEnergySensor):
     _attr_translation_key = ATTR_DAILY_BATT_CHARGE
     _attr_key = "dailyBattCharge"
     _attr_icon = "mdi:battery-plus"
-    _attr_state_class = SensorStateClass.TOTAL
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
 
 class DailyBattDischargeSensor(EsyEnergySensor):
