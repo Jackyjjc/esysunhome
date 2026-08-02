@@ -596,8 +596,18 @@ class DynamicTelemetryParser:
         result["totalPowerGeneration"] = values.get("totalEnergyGeneration") or values.get("totalPowerGeneration") or 0
         result["dailyConsumption"] = values.get("dailyPowerConsumption") or values.get("dailyConsumption") or 0
         result["dailyGridExport"] = values.get("dailyGridConnectionPower") or values.get("dailyGridExport") or 0
-        result["dailyBattCharge"] = values.get("dailyBattChargeEnergy") or values.get("dailyBattCharge") or 0
-        result["dailyBattDischarge"] = values.get("dailyBattDischargeEnergy") or values.get("dailyBattDischarge") or 0
+        # Battery energy registers are not present in every partial MQTT frame.
+        # Omit them when absent so the coordinator can preserve its cached value,
+        # while still forwarding an explicit zero for a genuine daily reset.
+        if "dailyBattChargeEnergy" in values:
+            result["dailyBattCharge"] = values["dailyBattChargeEnergy"]
+        elif "dailyBattCharge" in values:
+            result["dailyBattCharge"] = values["dailyBattCharge"]
+
+        if "dailyBattDischargeEnergy" in values:
+            result["dailyBattDischarge"] = values["dailyBattDischargeEnergy"]
+        elif "dailyBattDischarge" in values:
+            result["dailyBattDischarge"] = values["dailyBattDischarge"]
         
         # === VOLTAGE & FREQUENCY ===
         # Single-phase models expose gridVolt/gridFreq; three-phase models expose

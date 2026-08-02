@@ -89,13 +89,15 @@ logger:
 
 **Developer Tools → Actions → esy_sunhome.dump_debug → Copy output from (Settings → System → Logs)**
 
-### Correct Incorrect Battery Charge Statistics
+### Correct Incorrect Battery Energy Statistics
 
-Version 2.2.4 corrects how Home Assistant handles the daily battery charge
-counter when the inverter resets it after midnight. Previously recorded spikes
-are not changed automatically. To repair them, go to **Developer Tools →
-Statistics**, find **Daily Battery Charge**, select **Adjust sum**, and correct
-the affected date and time.
+Version 2.2.5 prevents partial MQTT updates from briefly reporting zero for the
+daily battery charge and discharge counters, and configures both counters so
+Home Assistant handles their midnight resets correctly. Previously recorded
+spikes and negative totals are not changed automatically. To repair them, go to
+**Developer Tools → Statistics**, find **Daily Battery Charge** and **Daily
+Battery Discharge**, select **Adjust sum**, and correct the affected date and
+time.
 
 ## Referral Codes
 

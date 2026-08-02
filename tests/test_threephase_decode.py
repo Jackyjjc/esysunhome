@@ -93,3 +93,37 @@ def test_three_phase_missing_load_does_not_zero_flows():
     })
     assert r["pvPower"] == 3000
     assert r["gridPower"] == -900
+
+
+def test_partial_frame_preserves_cached_battery_energy():
+    cached = _decode(1, {
+        "dailyBattChargeEnergy": 3.2,
+        "dailyBattDischargeEnergy": 1.1,
+        "batteryStatus": 0,
+    })
+
+    partial = _decode(1, {"batteryStatus": 0})
+    assert "dailyBattCharge" not in partial
+    assert "dailyBattDischarge" not in partial
+
+    cached.update(partial)
+    assert cached["dailyBattCharge"] == 3.2
+    assert cached["dailyBattDischarge"] == 1.1
+
+
+def test_explicit_zero_resets_cached_battery_energy():
+    cached = _decode(1, {
+        "dailyBattChargeEnergy": 3.2,
+        "dailyBattDischargeEnergy": 1.1,
+        "batteryStatus": 0,
+    })
+
+    reset = _decode(1, {
+        "dailyBattChargeEnergy": 0,
+        "dailyBattDischargeEnergy": 0,
+        "batteryStatus": 0,
+    })
+    cached.update(reset)
+
+    assert cached["dailyBattCharge"] == 0
+    assert cached["dailyBattDischarge"] == 0
